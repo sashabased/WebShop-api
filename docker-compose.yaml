@@ -5,7 +5,7 @@ services:
     image: postgres:15
     container_name: shop_db
     restart: always
-    enviroment:
+    environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=19762003
       - POSTGRES_DB=shop_db
@@ -20,4 +20,4 @@ services:
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/shop_db
+      - DATABASE_URL=postgresql://postgres:19762003@db:5432/shop_db
