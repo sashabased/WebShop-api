@@ -6,11 +6,11 @@ services:
     container_name: shop_db
     restart: always
     enviroment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=19762003
       - POSTGRES_DB=shop_db
     ports:
-      "5432:5432"
+      - "5432:5432"
 
   app:
     build: .
