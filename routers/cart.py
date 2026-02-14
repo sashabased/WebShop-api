@@ -14,13 +14,31 @@ router = APIRouter(
 
 @router.get("/", response_model=list[CartRead], status_code=200)
 async def get_all_carts(session: AsyncSession = Depends(get_db)):
-    result = await session.scalars(select(Cart))
+    result = await session.scalars(
+        select(Cart)
+        .options(joinedload(Cart.item))
+    )
     carts = result.all()
 
     if not carts:
         raise HTTPException(status_code=404)
 
     return carts
+
+@router.get("/{user_id}", response_model=list[CartRead], status_code=200)
+async def get_user_cart(user_id: UUID, session: AsyncSession = Depends(get_db)):
+    cart_items = await session.scalars(
+        select(Cart)
+        .options(joinedload(Cart.item))
+        .where(user_id == Cart.user_id)
+    )
+
+    all_cart_items = cart_items.all()
+
+    if not all_cart_items:
+        raise HTTPException(status_code=404, detail="User dont have items in cart or cart doesnt exists.")
+
+    return all_cart_items
 
 @router.post("/", response_model=CartRead, status_code=201)
 async def add_to_cart(
@@ -65,29 +83,28 @@ async def edit_item_count_in_cart(
     cart_in: CartBase,
     session: AsyncSession = Depends(get_db)
 ):
-    deleted = False
     async with session.begin():
-        cart = await session.get(Cart, cart_id)
+        cart = await session.scalar(
+            select(Cart)
+            .options(joinedload(Cart.item))
+            .where(Cart.id == cart_id)
+        )
 
         if cart is None:
             raise HTTPException(status_code=404)
         
         if cart_in.items_count == 0 or cart.items_count == 0:
-            session.delete(cart)
-            deleted = True
+            await session.delete(cart)
+            return {"status": "item deleted from the cart"}
         
         data_to_update = cart_in.model_dump(exclude_unset=True)
 
         for key, value in data_to_update.items():
             setattr(cart, key, value)
 
-    if deleted:
-        return {"status": "deleted"}
-    else:
-        await session.refresh(cart)
-
-        return {
-            "items_count": cart.items_count,
-            "id": cart.id,
-            "item": cart.item
-        }
+    await session.refresh(cart)
+    return {
+        "items_count": cart.items_count,
+        "id": cart.id,
+        "item": cart.item
+    }

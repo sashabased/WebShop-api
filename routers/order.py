@@ -32,10 +32,11 @@ async def create_order(user_id: UUID, session: AsyncSession = Depends(get_db)):
         await session.flush()
 
         for items in all_items:
-            items.item.quantity -= items.items_count
 
-            if items.item.quantity < 0:
-                raise HTTPException(status_code=404, detail=f"Items quantity zero or below: {items.item.name}")
+            if items.item.quantity < 0 or items.item.quantity < items.items_count:
+                raise HTTPException(status_code=404, detail=f"Items quantity zero: {items.item.name}")
+            
+            items.item.quantity -= items.items_count
             
             new_order.overall_price += items.item.price * items.items_count
             order_item = Order_Item(

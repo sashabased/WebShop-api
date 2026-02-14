@@ -47,8 +47,8 @@ class ItemRead(ItemBase):
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
-    price: Optional[int] = None
-    quantity: Optional[int] = None
+    price: Optional[int] = Field(ge=0)
+    quantity: Optional[int] = Field(ge=0)
     description: Optional[str] = None
 
 # Cart table validation
@@ -69,8 +69,8 @@ class CartRead(CartBase):
 # Order items table validation
 
 class OrderItemRead(BaseModel):
-    quantity: int
-    price_on_purchase: int
+    quantity: int = Field(ge=0)
+    price_on_purchase: int = Field(ge=0)
     item: ItemRead
 
     model_config = ConfigDict(from_attributes=True)
@@ -79,7 +79,7 @@ class OrderItemRead(BaseModel):
 
 class OrderRead(BaseModel):
     id: UUID
-    overall_price: int
+    overall_price: int = Field(ge=0)
     order_date: datetime
     @field_serializer("order_date")
     def formate_datetime(self, dt: datetime):
