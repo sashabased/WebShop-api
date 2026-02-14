@@ -85,7 +85,7 @@ class OrderRead(BaseModel):
     def formate_datetime(self, dt: datetime):
         if dt is None:
             return None
-        return (dt.strftime('%Y-%m-%d %H-%M'))
+        return (dt.strftime('%Y-%m-%d %H:%M'))
 
     order_item: list[OrderItemRead]
 

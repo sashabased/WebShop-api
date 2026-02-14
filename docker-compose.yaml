@@ -19,5 +19,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    volumes:
+      - .:/app
     environment:
-      - DATABASE_URL=postgresql://postgres:19762003@db:5432/shop_db
+      - DATABASE_URL=postgresql+asyncpg://postgres:19762003@db:5432/shop_db
