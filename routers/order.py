@@ -12,7 +12,7 @@ router = APIRouter(
     tags=["order"]
 )
 
-@router.post("/", status_code=201)
+@router.post("/", response_model=OrderRead, status_code=201)
 async def create_order(user_id: UUID, session: AsyncSession = Depends(get_db)):
     async with session.begin():
         items_pull = await session.scalars(
@@ -51,7 +51,7 @@ async def create_order(user_id: UUID, session: AsyncSession = Depends(get_db)):
     await session.refresh(new_order)
     return new_order
 
-@router.get("/{user_id}", status_code=201)
+@router.get("/{user_id}", response_model=list[OrderRead], status_code=201)
 async def get_user_orders(user_id: UUID, session: AsyncSession = Depends(get_db)):
     all_orders = await session.scalars(
         select(Order).options(joinedload(Order.order_item)
