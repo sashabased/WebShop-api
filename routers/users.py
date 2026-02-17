@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 
 from models import User
-from schemas import UserCreate, UserRead, UserUpdate
+from schemas import UserBase, UserCreate, UserRead, UserUpdate
 from service.users import UserService
 
 from connection import get_db

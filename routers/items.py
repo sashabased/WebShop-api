@@ -1,10 +1,14 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Response, status
+from fastapi import APIRouter, HTTPException, Depends
+
 from models import Item
 from schemas import ItemBase, ItemCreate, ItemRead, ItemUpdate
+from service.items import ItemService
+
 from connection import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 from sqlalchemy import select
+
+from uuid import UUID
 
 router = APIRouter(
     prefix="/items",
@@ -13,23 +17,16 @@ router = APIRouter(
 
 @router.get("/", response_model=list[ItemRead])
 async def get_items(session: AsyncSession = Depends(get_db)):
-    query = select(Item)
-    result = await session.scalars(query)
-    items = result.all()
-    
+    items = await ItemService.get_all_items(session)
     if not items:
-        raise HTTPException(status_code=404)
-    
+        raise HTTPException(status_code=404, detail="database have no items")
     return items
 
 @router.get("/{item_id}", response_model=ItemRead, status_code=200)
 async def get_item_by_id(item_id: UUID, session: AsyncSession = Depends(get_db)):
-    query = select(Item).where(Item.id == item_id)
-    item = await session.scalar(query)
-
+    item = await ItemService.get_item_by_id(item_id, session)
     if item is None:
-        raise HTTPException(status_code=404)
-
+        raise HTTPException(status_code=404, detail='item not found')
     return item
 
 @router.post("/", response_model=ItemRead, status_code=201)

@@ -5,9 +5,8 @@ from uuid import UUID
 from models import User
 from schemas import UserCreate, UserUpdate
 
-from fastapi import HTTPException
-
 class UserService:
+    
     @staticmethod
     async def create_new_user(user_data: UserCreate, session: AsyncSession):
         user_to_add = User(**user_data.model_dump())
