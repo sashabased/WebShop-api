@@ -32,10 +32,10 @@ class UserUpdate(BaseModel):
 # Item table validation
 
 class ItemBase(BaseModel):
-    name: str = Field(max_length=100)
-    description: str = Field(max_length=1000)
-    quantity: int = Field(ge=0)
-    price: int = Field(ge=0)
+    name: Optional[str] = Field(None, max_length=100)
+    description: Optional[str] = Field(None, max_length=1000)
+    quantity: int = Field(0, ge=0)
+    price: int = Field(0, ge=0)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -47,8 +47,8 @@ class ItemRead(ItemBase):
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
-    price: Optional[int] = Field(ge=0)
-    quantity: Optional[int] = Field(ge=0)
+    price: Optional[int] = Field(None, ge=0)
+    quantity: Optional[int] = Field(None, ge=0)
     description: Optional[str] = None
 
 # Cart table validation

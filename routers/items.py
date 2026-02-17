@@ -31,20 +31,14 @@ async def get_item_by_id(item_id: UUID, session: AsyncSession = Depends(get_db))
 
 @router.post("/", response_model=ItemRead, status_code=201)
 async def add_item_to_shop(item_in: ItemCreate, session: AsyncSession = Depends(get_db)):
-    new_item = Item(**item_in.model_dump())
-    session.add(new_item)
-    await session.commit()
-    await session.refresh(new_item)
-
-    return new_item
+    return await ItemService.add_item_to_shop(item_in, session)
 
 @router.delete("/{item_id}", status_code=204)
 async def delete_item_by_id(item_id: UUID, session: AsyncSession = Depends(get_db)):
-    query = select(Item).where(Item.id == item_id)
-    item_to_delete = await session.scalar(query)
-
-    session.delete(item_to_delete)
-    await session.commit()
+    result = await ItemService.delete_item_by_id(item_id, session)
+    if not result:
+        raise HTTPException(status_code=404, detail="item id is wrong or doesnt exists")
+    
 
 @router.patch("/{item_id}", response_model=ItemRead, status_code=200)
 async def update_item_by_id(
@@ -52,17 +46,7 @@ async def update_item_by_id(
     item_in: ItemUpdate, 
     session: AsyncSession = Depends(get_db)
 ):
-    item = await session.get(Item, item_id)
-
+    item = await ItemService.update_item_by_id(item_id, item_in, session)
     if item is None:
-        raise HTTPException(status_code=404)
-    
-    data_for_update = item_in.model_dump(exclude_unset=True)
-    
-    for key, value in data_for_update.items():
-        setattr(item, key, value)
-
-    await session.commit()
-    await session.refresh(item)
-
+        raise HTTPException(status_code=404, detail="item id not found")
     return item

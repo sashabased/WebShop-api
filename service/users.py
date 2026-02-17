@@ -37,6 +37,7 @@ class UserService:
         
         session.delete(user_to_dlt)
         await session.commit()
+        
         return True
     
     @staticmethod
