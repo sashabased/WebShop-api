@@ -11,17 +11,19 @@ class CartService:
 
     @staticmethod
     async def get_all_carts(session: AsyncSession):
-        carts = await session.scalars(select(Cart))
+        carts = await session.scalars(select(Cart).options(joinedload(Cart.item)))
         carts_data = carts.all()
 
         return carts_data
     
     @staticmethod
     async def get_cart_by_id(user_id: UUID, session: AsyncSession):
-        return await session.scalar(
+        items = await session.scalars(
             select(Cart)
-            .where(Cart.id == user_id)
+            .options(joinedload(Cart.item))
+            .where(Cart.user_id == user_id)
         )
+        return items.all()
 
     @staticmethod
     async def create_cart(cart_in: CartCreate, session: AsyncSession):
