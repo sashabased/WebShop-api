@@ -35,9 +35,13 @@ async def create_cart(
     cart_in: CartCreate, 
     session: AsyncSession = Depends(get_db)
 ):
-    cart = await CartService.create_cart(cart_in, session)
-    return cart
-
+    try:
+        cart = await CartService.create_cart(cart_in, session) 
+        if cart is None:
+            raise HTTPException(status_code=404, detail="cart is none")
+        return cart
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.delete("/{cart_id}", status_code=204)
 async def delete_cart_by_id(cart_id: UUID, session: AsyncSession = Depends(get_db)):

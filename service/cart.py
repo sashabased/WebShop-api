@@ -1,4 +1,4 @@
-from models import Cart
+from models import Cart, Item
 from schemas import CartBase, CartCreate, CartRead
 
 from sqlalchemy.orm import joinedload
@@ -23,7 +23,19 @@ class CartService:
             .options(joinedload(Cart.item))
             .where(Cart.user_id == user_id)
         )
-        return items.all()
+
+        all_user_items = items.all()
+
+        for item in all_user_items:
+            if item.items_count > item.item.quantity:
+                if item.item.quantity != 0:
+                    item.items_count = item.item.quantity
+                elif item.item.quantity == 0:
+                    item.items_count = 0
+
+        await session.commit()
+
+        return all_user_items
 
     @staticmethod
     async def create_cart(cart_in: CartCreate, session: AsyncSession):
@@ -36,13 +48,24 @@ class CartService:
             )
         )
 
+        item_to_check = await session.scalar(
+            select(Item)
+            .where(cart_in.item_id == Item.id)
+            )
+
         cart_model = cart_in.model_dump()
         
         if cart is None:
-            cart = Cart(**cart_model)
-            session.add(cart)
+            if cart_in.items_count > item_to_check.quantity:
+                raise ValueError("not enought items to add for cart")
+            else:
+                cart = Cart(**cart_model)
+                session.add(cart)
         else:
             cart.items_count += cart_in.items_count
+            if cart.items_count > item_to_check.quantity:
+                cart.items_count -= cart_in.items_count
+                raise ValueError("not enought items to add for cart")
 
         await session.commit()
 
