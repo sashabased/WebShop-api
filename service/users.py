@@ -9,6 +9,14 @@ class UserService:
     
     @staticmethod
     async def create_new_user(user_data: UserCreate, session: AsyncSession):
+        user_check = await session.scalar(
+            select(User)
+            .where(User.email == user_data.email)
+        )
+
+        if user_check:
+            raise ValueError("account with this email is exists")
+        
         user_to_add = User(**user_data.model_dump())
         session.add(user_to_add)
         await session.commit()
@@ -35,7 +43,7 @@ class UserService:
         if not user_to_dlt:
             return False
         
-        session.delete(user_to_dlt)
+        await session.delete(user_to_dlt)
         await session.commit()
         
         return True
@@ -43,10 +51,17 @@ class UserService:
     @staticmethod
     async def update_user_by_id(user_id: UUID, user_in: UserUpdate, session: AsyncSession):
         user_to_upd = await session.get(User, user_id)
-
+        
         if user_to_upd is None:
             return None
 
+        if user_in.email is not None:
+            user_email = await session.scalar(
+            select(User).where(user_in.email == User.email, User.id != user_id)
+            )
+            if user_email:
+                raise ValueError("user with this email already exists")
+            
         user_model = user_in.model_dump(exclude_unset=True)
         for key, value in user_model.items():
             setattr(user_to_upd, key, value)

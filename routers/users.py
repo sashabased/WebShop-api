@@ -33,13 +33,17 @@ async def get_user_by_id(user_id: UUID, session: AsyncSession = Depends(get_db))
 
 @router.post("/", response_model=UserRead,status_code=201)
 async def add_user(user_in: UserCreate, session: AsyncSession = Depends(get_db)):
+    try:
+        new_user = await UserService.create_new_user(user_in, session)
 
-    return await UserService.create_new_user(user_in, session)
+        return new_user
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@router.delete("/{user_id}", status_code=204)
+@router.delete("/{user_id}", status_code=200)
 async def delete_user_by_id(user_id: UUID, session: AsyncSession = Depends(get_db)):
     result = await UserService.delete_user_by_id(user_id, session)
-    if not result:
+    if result == False:
         raise HTTPException(status_code=404, detail="user id is wrong or doesnt exists")
 
 @router.patch("/{user_id}", response_model=UserRead, status_code=200)
@@ -48,7 +52,11 @@ async def patch_user_by_id(
     user_in: UserUpdate,
     session: AsyncSession = Depends(get_db)
 ):
-    user = await UserService.update_user_by_id(user_id, user_in, session)
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found")
-    return user
+    try:
+        user_to_upd = await UserService.update_user_by_id(user_id, user_in, session)
+
+        if user_to_upd is None:
+            raise HTTPException(status_code=404, detail="user not found")
+        return user_to_upd
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

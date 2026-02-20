@@ -73,7 +73,10 @@ class Order(Base):
         primary_key=True,
         server_default=text("gen_random_uuid()")
     )
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    user_id: Mapped[Optional[UUID]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
     order_date: Mapped[datetime] = mapped_column(DateTime(
         timezone=True),
         default=func.now()

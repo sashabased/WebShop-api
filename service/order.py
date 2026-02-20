@@ -47,7 +47,13 @@ class OrderService:
                 session.add(order_item)
                 await session.delete(items)
 
-        await session.refresh(new_order, ["order_item"])
+        await session.scalar(
+            select(Order)
+            .options(selectinload(Order.order_item)
+            .selectinload(Order_Item.item))
+            .where(Order.user_id == user_id)
+            )
+        await session.refresh(new_order)
         return new_order
     
     @staticmethod
